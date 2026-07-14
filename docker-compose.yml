@@ -1,0 +1,33 @@
+---
+services:
+  android-emulator:
+    container_name: android-emulator-cloud-run
+    image: android-emulator-cloud-run:latest
+    build:
+      context: .
+    ports:
+      - "5555:5555"
+    volumes:
+      - ./data:/data
+      - ./extras:/extras
+    environment:
+      DNS: one.one.one.one
+      ROOT_SETUP: 0
+      GAPPS_SETUP: 0
+      ARM_TRANSLATION: 1
+    privileged: true
+    devices:
+      - /dev/kvm
+
+  scrcpy-web:
+    container_name: scrcpy-web
+    restart: unless-stopped
+    image: shmayro/scrcpy-web:latest
+    privileged: true
+    ports:
+      - 8000:8000
+    depends_on:
+      android-emulator:
+        condition: service_healthy
+    command: >
+      sh -c "adb connect android-emulator:5555 && npm start"
